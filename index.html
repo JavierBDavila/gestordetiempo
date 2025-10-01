@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Horas Libres</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gestor de Horas Libres</h1>
+            <p>Organiza tu tiempo entre estudio, juegos, deporte y convivencia</p>
+        </header>
+
+        <main>
+            <!-- Sección de horario de clases -->
+            <section class="card">
+                <h2>Horario de Clases</h2>
+                <div class="form-group">
+                    <label for="start-time">Hora de inicio:</label>
+                    <input type="time" id="start-time" required>
+                </div>
+                <div class="form-group">
+                    <label for="end-time">Hora de fin:</label>
+                    <input type="time" id="end-time" required>
+                </div>
+                <button id="calculate-btn" class="btn btn-primary">Calcular Horas Libres</button>
+                <div id="free-time-result" class="result"></div>
+            </section>
+
+            <!-- Sección de asignación de actividades -->
+            <section class="card">
+                <h2>Asignar Actividades</h2>
+                <div class="form-group">
+                    <label for="activity">Actividad:</label>
+                    <select id="activity">
+                        <option value="estudio">Estudio</option>
+                        <option value="juegos">Juegos</option>
+                        <option value="deporte">Deporte</option>
+                        <option value="convivencia">Convivencia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hours">Horas (hh:mm):</label>
+                    <input type="text" id="hours" placeholder="01:30" required pattern="[0-9]{1,2}:[0-9]{2}">
+                    <small>Formato: horas:minutos (ej: 02:15)</small>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Prioridad:</label>
+                    <select id="priority">
+                        <option value="muy-alta">Muy Alta</option>
+                        <option value="alta">Alta</option>
+                        <option value="media">Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                </div>
+                <button id="add-activity-btn" class="btn btn-secondary">Agregar Actividad</button>
+            </section>
+
+            <!-- Sección de resumen de actividades -->
+            <section class="card">
+                <h2>Resumen de Actividades</h2>
+                <table id="activities-table">
+                    <thead>
+                        <tr>
+                            <th>Actividad</th>
+                            <th>Horas</th>
+                            <th>Estado</th>
+                            <th>Prioridad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activities-body">
+                        <!-- Las actividades se agregarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Sección de recordatorios -->
+            <section class="card">
+                <h2>Seguimiento de Actividades</h2>
+                <div id="current-activity" class="current-activity">
+                    <p>No hay actividad en curso</p>
+                </div>
+                <div class="controls">
+                    <button id="start-reminder-btn" class="btn btn-success" disabled>Iniciar Recordatorio</button>
+                    <button id="complete-activity-btn" class="btn btn-warning" disabled>Completar Actividad</button>
+                </div>
+                <div id="notification-area" class="notification">
+                    <!-- Las notificaciones aparecerán aquí -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2023 Gestor de Horas Libres - Prototipo para Estudiantes</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
