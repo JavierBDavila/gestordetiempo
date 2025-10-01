@@ -7,6 +7,7 @@ let reminderInterval = null;
 let remainingTime = 0;
 let inactivityInterval = null;
 let notificationPermission = false;
+let userSleepHours = 8; // Por defecto 8 horas
 
 // =============================
 // Elementos del DOM
@@ -29,6 +30,9 @@ const notificationArea = document.getElementById('notification-area');
 // Event Listeners
 // =============================
 document.addEventListener('DOMContentLoaded', function() {
+    // Pedir horas de sueño primero
+    userSleepHours = elegirHorasSueno();
+    
     calculateBtn.addEventListener('click', calculateFreeTime);
     addActivityBtn.addEventListener('click', addActivity);
     startReminderBtn.addEventListener('click', startReminder);
@@ -43,6 +47,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Iniciar verificación de inactividad
     startInactivityCheck();
 });
+
+// =============================
+// Selección de horas de sueño con advertencias
+// =============================
+function elegirHorasSueno() {
+    let horas;
+
+    do {
+        horas = parseFloat(prompt("Ingresa cuántas horas planeas dormir (6-8 recomendado):"));
+
+        if (isNaN(horas)) {
+            alert("Por favor ingresa un número válido.");
+            continue;
+        }
+
+        if (horas < 6) {
+            alert("¡Advertencia! Dormir menos de 6 horas no es saludable. Por favor, elige un horario entre 6 y 8 horas.");
+        } else if (horas > 10) {
+            alert("Aviso: Dormir más de 10 horas puede no ser tan productivo. El rango saludable es alrededor de 8 horas, pero puedes continuar si deseas.");
+            break; // se permite continuar
+        } else {
+            // Entre 6 y 10 horas
+            break;
+        }
+    } while (true);
+
+    alert("Has elegido dormir " + horas + " horas. ¡Planifica bien tu descanso!");
+    
+    return horas;
+}
 
 // =============================
 // Manejo de notificaciones
@@ -106,7 +140,7 @@ function showBrowserNotification(title, message) {
 // =============================
 function startInactivityCheck() {
     if (inactivityInterval) clearInterval(inactivityInterval);
-    inactivityInterval = setInterval(checkInactivity, 30000); // cada 30 seg
+    inactivityInterval = setInterval(checkInactivity, 15000); // cada 15 seg
 }
 
 function checkInactivity() {
@@ -118,7 +152,9 @@ function checkInactivity() {
     }
 }
 
-// Calcular horas libres (considerando 24 horas del día)
+// =============================
+// Calcular horas libres (considerando sueño del usuario)
+// =============================
 function calculateFreeTime() {
     const startTime = startTimeInput.value;
     const endTime = endTimeInput.value;
@@ -141,16 +177,16 @@ function calculateFreeTime() {
     const classHours = Math.floor(classMinutes / 60);
     const classMins = classMinutes % 60;
     
-    // Calcular horas libres (24 horas - 8 horas sueño - horas de clases)
+    // Calcular horas libres (24 horas - horas de sueño del usuario - horas de clases)
     const totalDayMinutes = 24 * 60; // 24 horas en minutos
-    const sleepMinutes = 8 * 60; // 8 horas de sueño
+    const sleepMinutes = userSleepHours * 60; // usar horas de sueño del usuario
     const freeMinutes = totalDayMinutes - sleepMinutes - classMinutes;
     
     if (freeMinutes <= 0) {
         freeTimeResult.innerHTML = `
             <p><strong>Horas de clases:</strong> ${classHours}h ${classMins}m</p>
             <p><strong>Horas libres disponibles:</strong> 0h 0m</p>
-            <p>¡Atención! Después de considerar 8 horas de sueño y tu horario de clases, no te quedan horas libres.</p>
+            <p>¡Atención! Después de considerar ${userSleepHours} horas de sueño y tu horario de clases, no te quedan horas libres.</p>
             <p>Revisa tu horario de clases.</p>
         `;
         addActivityBtn.disabled = true;
@@ -163,7 +199,7 @@ function calculateFreeTime() {
     freeTimeResult.innerHTML = `
         <p><strong>Horas de clases:</strong> ${classHours}h ${classMins}m</p>
         <p><strong>Horas libres disponibles:</strong> ${freeHours}h ${freeMins}m</p>
-        <p><em>Nota: Se han reservado 8 horas para sueño (24h - 8h sueño - ${classHours}h${classMins}m clases)</em></p>
+        <p><em>Nota: Se han reservado ${userSleepHours} horas para sueño (24h - ${userSleepHours}h sueño - ${classHours}h${classMins}m clases)</em></p>
         <p>Ahora puedes asignar estas horas a tus actividades.</p>
     `;
     
@@ -177,26 +213,28 @@ function calculateFreeTime() {
     );
 }
 
-// Validar formato de horas para actividades (hh:mm)
+// =============================
+// Funciones auxiliares (hora, validación, conversión)
+// =============================
 function validateTimeFormat(time) {
     const timeRegex = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
     return timeRegex.test(time);
 }
 
-// Convertir tiempo en formato hh:mm a minutos
 function timeToMinutes(time) {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
 }
 
-// Convertir minutos a formato hh:mm
 function minutesToTime(minutes) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
 
-// Agregar una nueva actividad
+// =============================
+// Agregar actividad
+// =============================
 function addActivity() {
     const activity = activitySelect.value;
     const hours = hoursInput.value;
@@ -207,17 +245,12 @@ function addActivity() {
         return;
     }
     
-    // Validar formato de horas
     if (!validateTimeFormat(hours)) {
         showNotificationInternal('Por favor, ingresa el tiempo en formato hh:mm (ej: 01:30).', 'info');
         return;
     }
     
-    // Verificar que no se exceda el tiempo disponible
-    const totalAssignedMinutes = activities.reduce((total, act) => {
-        return total + timeToMinutes(act.hours);
-    }, 0);
-    
+    const totalAssignedMinutes = activities.reduce((total, act) => total + timeToMinutes(act.hours), 0);
     const newActivityMinutes = timeToMinutes(hours);
     const freeMinutes = calculateTotalFreeMinutes();
     
@@ -241,18 +274,15 @@ function addActivity() {
     activities.push(newActivity);
     renderActivitiesTable();
     
-    // Limpiar formulario pero mantener un valor por defecto
     hoursInput.value = "01:00";
     
-    // Habilitar el botón de iniciar recordatorio si hay actividades
-    if (activities.length > 0) {
-        startReminderBtn.disabled = false;
-    }
+    if (activities.length > 0) startReminderBtn.disabled = false;
     
     const message = `Actividad "${getActivityDisplayName(activity)}" agregada correctamente.`;
     showNotificationInternal(message, 'success');
     showBrowserNotification("Actividad Agregada", message);
 }
+
 
 // Obtener nombre legible de la actividad
 function getActivityDisplayName(activity) {
